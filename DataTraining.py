@@ -216,9 +216,9 @@ def create_dataset(library, MCH_out, outputDir):
             feature_data1[n, :, :, :, 3] = structure_plot
 
             start_pos = int(TE.id.split("_")[-2])
-            end_pos = int(TE.id.split("_")[-1])
+            TE_len = int(TE.id.split("_")[-1])
             labels[n, 0] = start_pos / 20000
-            labels[n, 1] = end_pos / 20000
+            labels[n, 1] = (start_pos + TE_len) / 20000
             n += 1
         except Exception as ex:
             print("something wrong with " + TE_name)
