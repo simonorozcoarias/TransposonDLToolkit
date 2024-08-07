@@ -1,4 +1,4 @@
-# auto_trimming
+# Auto Trimming
 A multi-input deep neural network for trimming out automatically artifacts in transposable element sequences.
 
 ## Training
