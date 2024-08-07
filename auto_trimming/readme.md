@@ -6,6 +6,11 @@ A 2.3 millions parameters neural network was trained with a simulated dataset, t
 
 ## results
 
+### Neural network architecture
+<p align="center">
+  <img src="https://github.com/simonorozcoarias/TransposonDLToolkit/blob/main/auto_trimming/model_plot.png" alt="TE Auto Trimming - architecture" />
+</p>
+
 ### Training curves:
 Loss vs epochs 
 <p align="center">
@@ -14,15 +19,16 @@ Loss vs epochs
 
 R2 Score vs epochs
 <p align="center">
-  <img src="https://github.com/simonorozcoarias/TransposonDLToolkit/blob/main/auto_trimming/Train_Curve.png" alt="TE Auto Trimming - training" />
+  <img src="https://github.com/simonorozcoarias/TransposonDLToolkit/blob/main/auto_trimming/Train_Curve.png" alt="TE Auto Trimming - R2 score starting" />
 </p>
 
 Starting position predictions in the test datset
 <p align="center">
-  <img src="https://github.com/simonorozcoarias/TransposonDLToolkit/blob/main/auto_trimming/r2_StartingPos.png" alt="TE Auto Trimming - training" />
+  <img src="https://github.com/simonorozcoarias/TransposonDLToolkit/blob/main/auto_trimming/r2_StartingPos.png" alt="TE Auto Trimming - R2 score ending" />
 </p>
 
 Ending position predictions in the test datset
 <p align="center">
   <img src="https://github.com/simonorozcoarias/TransposonDLToolkit/blob/main/auto_trimming/r2_EndingPos.png" alt="TE Auto Trimming - training" />
 </p>
+
