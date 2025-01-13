@@ -7,8 +7,11 @@ This repository contains curated and uncurated datasets derived from Dfam, along
 ## Current Data Structure
 
 ### Folders:
+Folders generated when using the scripts:
+
 - **`libraries_curated`**: Contains curated datasets from Dfam.  
 - **`libraries_NO_curated`**: Contains uncurated datasets from Dfam.  
+- **`curated_MCHelper`**: Contains curated datasets using MCHelper.
 - **`libraries_all`**: If generated, this folder contains both curated and uncurated datasets.
 
 
