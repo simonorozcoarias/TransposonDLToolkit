@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 root = tk.Tk()
-root.withdraw()  # Ocultar la ventana principal
+root.withdraw()  
 ruta_fasta = filedialog.askopenfilename(title="Selecciona un archivo FASTA", filetypes=[("FASTA files", "*.fasta"), ("All files", "*.*")])
 
 if not ruta_fasta:
