@@ -1,0 +1,225 @@
+# DNABERT-2 Token Classification Fine-tuning Configuration
+# Configuration for Transposable Element Detection
+#
+# ============================================================
+# CONFIGURATION OPTIMIZED BASED ON EMPIRICAL RESULTS
+# ============================================================
+# Analysis of multiple training runs revealed:
+#
+# 1. LEARNING RATE CRITICAL:
+#    - 3e-5: Catastrophic forgetting after step 200 (F1: 85% → 0%)
+#    - 2e-6: Too slow - only 1.4% of epoch before early stop (F1: 40%)
+#    - 5e-6: OPTIMAL - Good convergence speed with stability
+#
+# 2. WARMUP ESSENTIAL:
+#    - Proportional to epoch size works best
+#    - ~10% of one epoch (2800 steps) allows stable initialization
+#    - Prevents early instability while reaching full LR quickly enough
+#
+# 3. EVALUATION FREQUENCY:
+#    - Too frequent (100 steps): Triggers early stop before learning
+#    - Optimal (500 steps): ~18% of epoch, balances monitoring vs training
+#
+# 4. EARLY STOPPING PATIENCE:
+#    - Too aggressive (patience=3, 300 steps): Stops before convergence
+#    - Balanced (patience=10, 5000 steps): Allows ~1.5 epochs exploration
+#    - Prevents overfitting while giving model time to learn
+#
+# 5. SCHEDULER:
+#    - Polynomial: Smoother decay than cosine, better long-term stability
+#
+# 6. FREEZING ENCODER FAILS:
+#    - Full fine-tuning REQUIRED for TE detection task
+#
+# ============================================================
+
+# ============================================================
+# Model Configuration
+# ============================================================
+model:
+  name_or_path: "zhihan1996/DNABERT-2-117M"
+  num_labels: 2  # Binary classification: 0=background, 1=TE
+  problem_type: "single_label_classification"
+
+# ============================================================
+# Data Configuration
+# ============================================================
+data:
+  # Path to combined dataset splits (NEW Split-Then-Combine pipeline)
+  # Each split has been:
+  # 1. Created per species (80/10/10 stratification)
+  # 2. Combined across all species
+  # 3. Shuffled to mix species and avoid order bias
+  dataset_path: "datasets/combined_all_species_splits"  # Updated for new pipeline
+  train_split: "train"
+  validation_split: "val"  # Changed from 'validation' to 'val' for new pipeline
+  test_split: "test"
+
+  # Data is already tokenized with these properties
+  max_length: 512  # Tokens (not base pairs!)
+  is_pretokenized: true
+
+# ============================================================
+# Training Hyperparameters (SCALED FOR ~1000 SPECIES)
+# ============================================================
+# CONFIGURATION UPDATED FOR LARGE-SCALE DATASET:
+# - Dataset scaled from 32 to ~1000 species (31x increase)
+# - Adjusted epochs, batch size, and evaluation frequency
+# - Optimized for faster training and better generalization
+# ============================================================
+training:
+  # Basic hyperparameters
+  # BALANCED learning rate: 5e-6 showed good results in previous experiments
+  # Not too high (3e-5 caused forgetting) nor too low (2e-6 too slow)
+  learning_rate: 5.0e-6  # Sweet spot: fast enough convergence, stable learning
+  num_train_epochs: 2  # REDUCED from 5: With 31x more data, fewer epochs prevent overfitting
+  per_device_train_batch_size: 24  # INCREASED from 16 (11.5GB free - maximizing GPU usage)
+  per_device_eval_batch_size: 192  # INCREASED from 128 (50% faster validation!)
+  gradient_accumulation_steps: 2  # Maintains global batch ~192 (large dataset needs large batches)
+  eval_accumulation_steps: 32  # INCREASED from 16: Prevents GPU->CPU transfers during eval
+
+  # Optimization
+  # Regularization settings optimized for TE detection task
+  weight_decay: 0.01  # Balanced regularization (0.05 may be too aggressive)
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1.0e-8
+  # Conservative gradient clipping to prevent divergence
+  max_grad_norm: 1.0  # Standard value works well with lower LR
+
+  # Learning rate schedule
+  # CHANGED to polynomial for smoother, more stable decay than cosine
+  lr_scheduler_type: "polynomial"  # More stable than cosine, prevents sharp drops
+  # Warmup reduced with larger dataset: 2% of one epoch is sufficient
+  # With ~27M samples and batch 128: ~210K steps/epoch * 0.02 = ~4200 steps
+  # Conservative: 1000 steps is enough for stable initialization
+  warmup_steps: 1000  # REDUCED from 2800: Less warmup needed with large dataset
+
+  # Mixed precision training
+  fp16: true
+  fp16_opt_level: "O1"
+
+  # Evaluation and saving
+  evaluation_strategy: "steps"
+  # INCREASED from 1000: With 18GB val set, less frequent eval prevents OOM issues
+  # With step ~3.6s, 2000 steps = ~2 hours between saves (acceptable trade-off)
+  eval_steps: 2000  # Evaluate every ~2 hours (was 1000, causing eval OOM with 18GB val set)
+  save_strategy: "steps"
+  save_steps: 2000  # Match eval_steps - saves checkpoint every ~2 hours
+  save_total_limit: 5  # Keep more checkpoints for safety (was 3)
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_f1"
+  greater_is_better: true
+
+  # Logging
+  logging_strategy: "steps"
+  logging_steps: 50  # REDUCED from 100: More frequent logging for better monitoring
+  logging_first_step: true  # Log the very first step
+  report_to: "tensorboard"
+
+  # Misc
+  seed: 42
+  # CRITICAL FIX: Disable multiprocessing to prevent "Pin memory thread exited unexpectedly" error
+  # This error occurs in SLURM environments with temporary file cleanup issues
+  # num_workers=0 forces single-process data loading (slower but stable)
+  dataloader_num_workers: 0  # CHANGED from 4: Prevents multiprocessing issues in SLURM
+  dataloader_pin_memory: false  # CHANGED from true: Prevents pin_memory thread crashes
+  ignore_data_skip: false
+
+  # Class imbalance handling
+  # TWO METHODS AVAILABLE:
+  # 1. Dynamic class weights (RECOMMENDED - uses actual token distribution)
+  #    - Calculates weights from training dataset using sklearn
+  #    - More accurate because it works with BPE tokens, not raw nucleotides
+  # 2. Static imbalance ratio (nucleotide-based proxy)
+  #    - Uses background_bases / te_bases from all_species_coverage.csv
+  #    - Less accurate (assumes nucleotide ratio ≈ token ratio)
+  use_dynamic_class_weights: true  # Recommended for AutoModel architecture
+  imbalance_ratio: null  # Only used if use_dynamic_class_weights=false (null = use default 2.96)
+
+# ============================================================
+# Early Stopping Configuration
+# ============================================================
+early_stopping:
+  enabled: true
+  # With eval_steps=2000, patience=10 means 20,000 steps (~20 hours)
+  # Gives model time to explore while preventing excessive overfitting
+  patience: 10  # Stop if no improvement for 10 evaluations (10 * 2000 = 20,000 steps)
+  threshold: 0.0  # No threshold - any improvement counts
+  min_epochs: 1  # Complete at least 1 full epoch before early stopping can activate
+
+# ============================================================
+# Hardware Configuration
+# ============================================================
+hardware:
+  # Multi-GPU setup (official recommendation: 4 GPUs)
+  num_gpus: 1
+  distributed_backend: "nccl"  # For multi-GPU training
+
+  # Memory optimization
+  gradient_checkpointing: false  # Set to true if OOM (slower but less memory)
+  optim: "adamw_torch"  # Can use "adamw_torch_fused" for faster training on newer GPUs
+
+# ============================================================
+# Output Configuration
+# ============================================================
+output:
+  # Output directory for checkpoints and logs
+  output_dir: "./results/dnabert2_te_token_classification"
+  logging_dir: "./results/dnabert2_te_token_classification/logs"
+
+  # Run name for TensorBoard
+  run_name: "dnabert2_te_detection"
+
+# ============================================================
+# Evaluation Metrics
+# ============================================================
+metrics:
+  # Which metrics to compute during evaluation
+  compute_metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+
+  # Average type for multi-class metrics
+  average: "binary"  # Binary classification
+
+  # Ignore index for loss computation (-100 for special tokens)
+  ignore_index: -100
+
+# ============================================================
+# Advanced Options (Optional)
+# ============================================================
+advanced:
+  # Resume from checkpoint
+  resume_from_checkpoint: null  # Set to checkpoint path to resume
+
+  # Validation set limiting (to prevent OOM during eval with large val sets)
+  max_eval_samples: 50000  # Limit validation to 50K samples per eval (rotates through full set)
+
+  # Debug mode (use small subset for testing)
+  debug_mode: false
+  debug_samples: 1000  # Number of samples to use in debug mode
+
+  # Push to HuggingFace Hub (optional)
+  push_to_hub: false
+  hub_model_id: null  # e.g., "your-username/dnabert2-te-detection"
+  hub_token: null
+
+  # Sharded DDP (for very large models)
+  sharded_ddp: false
+
+  # DeepSpeed config (for even larger models)
+  deepspeed: null  # Path to DeepSpeed config if needed
+
+# ============================================================
+# Species-specific Evaluation (Future Implementation)
+# ============================================================
+species_eval:
+  enabled: false  # Set to true to enable per-species evaluation
+  species_list:
+    - "Homo_sapiens"
+    - "Mus_musculus"
+    - "Drosophila_melanogaster"
+    # Add other species as needed

@@ -1,0 +1,233 @@
+# DNABERT-2 Token Classification - PRODUCTION CONFIGURATION
+# Multi-kingdom training with 40 species (15 animals, 10 plants, 10 fungi, 5 other)
+#
+# This configuration is optimized for production model training with:
+# 1. Balanced learning rate (2e-5) proven successful in 32-species test
+# 2. 5 epochs for thorough learning without overfitting
+# 3. Moderate evaluation frequency (500 steps) for monitoring
+# 4. Critical stability fixes (dataloader settings)
+#
+# Expected runtime: 3-5 days for 40 species
+
+# ============================================================
+# Model Configuration
+# ============================================================
+model:
+  name_or_path: "zhihan1996/DNABERT-2-117M"
+  num_labels: 2  # Binary classification: 0=background, 1=TE
+  problem_type: "single_label_classification"
+
+# ============================================================
+# Data Configuration - FLEXIBLE FOR PRODUCTION
+# ============================================================
+data:
+  # Path to dataset (will be updated by submit_training_production.sh)
+  # Default placeholder for 40-species production run
+  dataset_path: "datasets_combined/40_species_production"
+  train_split: "train"
+  validation_split: "val"
+  test_split: "test"
+
+  # Data is already tokenized
+  max_length: 512
+  is_pretokenized: true
+
+# ============================================================
+# Training Hyperparameters - OPTIMIZED FOR 40 SPECIES
+# ============================================================
+# CONFIGURATION TUNED BASED ON SUCCESSFUL TESTS:
+# - 32-species test: Successful with 2e-5 LR, 5 epochs
+# - 16-species test: F1=0.84 (strong baseline)
+# - Single-species: Proven stability with current settings
+# ============================================================
+training:
+  # Class imbalance handling
+  # TWO METHODS AVAILABLE:
+  # 1. Dynamic class weights (RECOMMENDED - uses actual token distribution)
+  #    - Calculates weights from training dataset using sklearn
+  #    - More accurate because it works with BPE tokens, not raw nucleotides
+  # 2. Static imbalance ratio (nucleotide-based proxy)
+  #    - Uses background_bases / te_bases from all_species_coverage.csv
+  #    - Less accurate (assumes nucleotide ratio ≈ token ratio)
+  # EXPERIMENT 15: BACK TO BASICS (Simplified approach based on failure analysis)
+  # After 8 failed experiments (2,9,10,11,12,13,14a,14b), root cause analysis shows:
+  #
+  # CRITICAL FINDING: Training loss INCREASES after warmup
+  #   Step 100: loss=0.13, LR=1.5e-5 (warmup) ← Model LEARNS
+  #   Step 250: loss=0.31, LR=3.0e-5 (max)    ← Model UNLEARNS
+  #   Conclusion: LR 3e-5 is TOO HIGH for this task
+  #
+  # FOCAL LOSS ISSUES IDENTIFIED:
+  #   - Alpha [0.67, 2.0] reduces penalty for misclassifying background as TE
+  #   - This incentivizes trivial solution: predict ALL as TE (F1=0.404, recall=1.0)
+  #   - All Focal Loss experiments converged to same bad state
+  #   Exp 14a (gamma=2.0): Step 500 F1=0.85 → Step 1000 F1=0.15 (violent oscillation)
+  #   Exp 14b (gamma=1.0): Step 500 F1=0.05 → Step 1500+ F1=0.40 (predict all TE)
+  #
+  # NEW STRATEGY: Reduce LR dramatically, simple class weights, longer training
+  #   - LR 1e-5 (1/3 of previous) - model learns well at this rate during warmup
+  #   - 20 epochs to compensate for slower learning
+  #   - Cosine scheduler for smooth decay
+  #   - Simple sklearn balanced weights (proven stable in short runs)
+  #
+  use_focal_loss: false  # Disable Focal Loss - too unstable with our config
+  use_dynamic_class_weights: true  # Simple sklearn balanced weights
+  imbalance_ratio: null  # Use dynamic calculation from dataset
+
+  # Basic hyperparameters
+  # DISCRIMINATIVE LEARNING RATES (critical for pretrained base + new classifier head)
+  # Base DNABERT-2 (99.998% pretrained): Low LR to preserve pretrained weights
+  # Classifier head (randomly initialized): High LR to learn quickly
+  # This prevents model collapse observed with uniform low LR (8e-6)
+  # DISCRIMINATIVE LR EXPERIMENTS - ALL FAILED (Exp 2, 9, 10, 11, 12):
+  #   - 5e-4 (50x):  Best F1=0.838 @ 1000, collapsed @ 2500 (WITH weights)
+  #   - 5e-4 (50x):  F1=0.801 @ 500, collapsed @ 1500 (WITHOUT weights)
+  #   - 2e-4 (20x):  F1=0.780 @ 1000, collapsed @ 2500 (WITHOUT weights)
+  #   - 2e-4 (20x):  F1=0.774 @ 1000, VIOLENT OSCILLATION @ 2000 (WITH weights) ⚠️
+  #   - 1e-4 (10x):  F1=0.781 @ 1000, collapsed @ 1500 (WITH weights)
+  #
+  #   CONCLUSION: Discriminative LR fundamentally unstable - base/classifier desync inevitable
+  #   All ratios (10x-50x) collapse between steps 1500-2500 regardless of configuration
+  #
+  # EXPERIMENT 13: UNIFORM LR (BERT Standard Approach) - FAILED
+  #   - Abandoned discriminative LR entirely
+  #   - Used 3e-5 uniform LR (BERT/DNABERT-2 standard)
+  #   - Class weights enabled
+  #   - Result: FAILED (user reported)
+  #
+  # EXPERIMENT 14: FOCAL LOSS (Current approach - see above)
+
+  # ============================================================
+  # FREEZE BASE MODEL OPTION (Feature Extraction Approach)
+  # ============================================================
+  # When freeze_base_model = true:
+  #   - Base DNABERT-2 model is frozen (no gradient updates)
+  #   - Only the classifier head (dropout + linear) is trained
+  #   - Requires HIGHER learning rate (1e-4 to 5e-4) since classifier starts from random init
+  #   - Much faster training and lower memory usage
+  #   - Use this to test if proper weight initialization solves previous issues
+  #
+  # When freeze_base_model = false:
+  #   - Full fine-tuning (current approach)
+  #   - All parameters are trainable
+  #   - Requires LOWER learning rate (1e-5 to 5e-5)
+  # EXPERIMENT 16: FREEZE BASE MODEL + PROPER WEIGHT INITIALIZATION
+  # Testing if previous failures were due to improper classifier initialization
+  # Hypothesis: With proper weight init (Normal(0, 0.02)) and frozen base,
+  # the classifier should learn effectively without model collapse
+  freeze_base_model: false  # ENABLED - Feature extraction approach
+
+  # DISCRIMINATIVE LR DISABLED - Using uniform LR instead
+  # base_learning_rate: null
+  # classifier_learning_rate: null
+
+  # Learning rate depends on freeze_base_model setting:
+  # - If freeze_base_model = true:  Use 2e-4 to 5e-4 (classifier only, needs high LR)
+  # - If freeze_base_model = false: Use 1e-5 to 5e-5 (full fine-tuning, needs low LR)
+  learning_rate: 2.0e-5  # HIGH LR for frozen base + classifier training
+  num_train_epochs: 10  # Reduced - faster convergence expected with classifier-only training
+  per_device_train_batch_size: 24  # Maximizes GPU usage (11.5GB free)
+  per_device_eval_batch_size: 192  # 50% faster validation
+  gradient_accumulation_steps: 3  # Effective global batch ~72
+  eval_accumulation_steps: 32  # CRITICAL: prevents GPU->CPU transfers during eval
+
+  # Optimization
+  weight_decay: 0.01
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1.0e-8
+  max_grad_norm: 1.0  # HuggingFace/BERT standard - prevents exploding gradients without truncating useful information
+
+  # Learning rate schedule - Cosine for smooth decay
+  lr_scheduler_type: "cosine"  # Cosine decay - smoother than linear
+  warmup_steps: 500  # Extended warmup (2.5x more than before) for stability
+  # Note: 500 steps = ~36,000 samples with batch_size=24, grad_accum=3
+  # Longer warmup helps model adapt gradually to lower LR
+
+  # Mixed precision training
+  fp16: true
+  fp16_opt_level: "O1"
+
+  # Evaluation and saving - BALANCED FOR PRODUCTION
+  evaluation_strategy: "steps"
+  eval_steps: 500  # User requirement: evaluate every ~30-45 min
+  save_strategy: "steps"
+  save_steps: 500  # Match eval_steps
+  save_total_limit: 5  # Keep more checkpoints for safety
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_f1"
+  greater_is_better: true
+
+  # Logging
+  logging_strategy: "steps"
+  logging_steps: 50  # Frequent logging for monitoring
+  logging_first_step: true
+  report_to: "tensorboard"
+
+  # Misc
+  seed: 42
+  # CRITICAL FIXES: Prevent multiprocessing errors in SLURM environment
+  # These settings are essential for stability - DO NOT CHANGE
+  dataloader_num_workers: 0  # Single-process loading prevents socket errors
+  dataloader_pin_memory: false  # Prevents pin_memory thread crashes
+  ignore_data_skip: false
+
+# ============================================================
+# Early Stopping Configuration
+# ============================================================
+early_stopping:
+  enabled: true
+  patience: 10  # Stop if no improvement for 10 evaluations (10 × 500 = 5000 steps)
+  threshold: 0.0  # No threshold - any improvement counts
+  min_epochs: 1  # Complete at least 1 full epoch before early stopping can activate
+
+# ============================================================
+# Hardware Configuration
+# ============================================================
+hardware:
+  num_gpus: 1
+  distributed_backend: "nccl"
+  gradient_checkpointing: false  # Set to true if OOM
+  optim: "adamw_torch"
+
+# ============================================================
+# Output Configuration
+# ============================================================
+output:
+  # Output directory for checkpoints and logs
+  # Will be updated by submit_training_production.sh with timestamp
+  output_dir: "./results/production_40_species"
+  logging_dir: "./results/production_40_species/logs"
+  run_name: "production_40_species"
+
+# ============================================================
+# Evaluation Metrics
+# ============================================================
+metrics:
+  compute_metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+  average: "binary"
+  ignore_index: -100
+
+# ============================================================
+# Advanced Options
+# ============================================================
+advanced:
+  resume_from_checkpoint: null
+  # Validation set limiting (to prevent OOM during eval with large val sets)
+  max_eval_samples: 25000  # Limit validation to 25K samples per eval
+  debug_mode: false  # Don't use debug_mode for production
+  push_to_hub: false
+  hub_model_id: null
+  hub_token: null
+  sharded_ddp: false
+  deepspeed: null
+
+# ============================================================
+# Species-specific Evaluation (Future Implementation)
+# ============================================================
+species_eval:
+  enabled: false  # Could be enabled post-training for per-category analysis

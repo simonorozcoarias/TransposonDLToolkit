@@ -1,0 +1,12 @@
+##gff-version 3
+##sequence-region 2L 1 500000
+2L	FlyBase	transposable_element	9726	9859	.	.	.	ID=FBti0060580;Name=Idefix{}2519
+2L	FlyBase	transposable_element	24236	24462	.	.	.	ID=FBti0059812;Name=INE-1{}1751
+2L	FlyBase	transposable_element	47514	52519	.	.	.	ID=FBti0019092;Name=jockey{}277
+2L	FlyBase	transposable_element	60240	60580	.	.	.	ID=FBti0059816;Name=INE-1{}1755
+2L	FlyBase	transposable_element	60663	60773	.	.	.	ID=FBti0059818;Name=INE-1{}1757
+2L	FlyBase	transposable_element	64316	64936	.	.	.	ID=FBti0019093;Name=X{}278
+2L	FlyBase	transposable_element	116518	116976	.	.	.	ID=FBti0060557;Name=INE-1{}2496
+2L	FlyBase	transposable_element	172692	172724	.	.	.	ID=FBti0060558;Name=INE-1{}2497
+2L	FlyBase	transposable_element	178279	178467	.	.	.	ID=FBti0060560;Name=INE-1{}2499
+2L	FlyBase	transposable_element	179822	179909	.	.	.	ID=FBti0060561;Name=INE-1{}2500

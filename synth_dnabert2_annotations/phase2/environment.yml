@@ -1,0 +1,89 @@
+name: dnabert2_te
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python version
+  - python=3.8
+
+  # System dependencies
+  - pip
+  - git
+
+  # Optional: Install some packages via conda for better compatibility
+  # (Most will be installed via pip from requirements.txt)
+  - numpy>=2.0.0
+  - pandas>=1.5.0
+  - matplotlib>=3.5.0
+  - seaborn>=0.12.0
+  - scikit-learn>=1.0.0
+  - jupyter>=1.0.0
+  - ipykernel>=6.0.0
+
+  # Install remaining packages via pip
+  - pip:
+      # IMPORTANT: PyTorch must be installed separately with CUDA support
+      # After creating environment, run:
+      #   conda activate dnabert2_te
+      #   pip install torch==2.4.1+cu118 torchvision==0.19.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+      # Then:
+      #   pip install -r requirements.txt
+
+      # Genomics
+      - biopython>=1.83
+
+      # Deep Learning (install PyTorch separately as noted above)
+      - triton>=2.2.0
+
+      # Transformers
+      - transformers>=4.35.0
+      - tokenizers>=0.15.0
+      - sentencepiece>=0.1.99
+      - datasets>=2.14.0
+      - accelerate>=0.24.0
+      - einops>=0.6.0
+
+      # Utilities
+      - PyYAML>=6.0
+      - tqdm>=4.65.0
+
+      # Optional
+      - tensorboard>=2.14.0
+
+# Usage Instructions:
+# ==================
+#
+# 1. Create environment:
+#    conda env create -f environment.yml
+#
+# 2. Activate environment:
+#    conda activate dnabert2_te
+#
+# 3. Install PyTorch with CUDA support:
+#    For CUDA 11.8:
+#      pip install torch==2.4.1+cu118 torchvision==0.19.1+cu118 \
+#        --index-url https://download.pytorch.org/whl/cu118
+#
+#    For CUDA 12.1:
+#      pip install torch torchvision \
+#        --index-url https://download.pytorch.org/whl/cu121
+#
+# 4. Verify PyTorch CUDA:
+#    python -c "import torch; print(torch.cuda.is_available())"
+#
+# 5. Apply DNABERT-2 fixes:
+#    bash scripts/apply_dnabert2_fixes.sh
+#
+# 6. Test installation:
+#    python scripts/testing/test_dnabert2_installation.py
+#
+# Alternative: Use the automated setup script:
+#    bash scripts/setup_environment.sh
+#
+# Notes:
+# ======
+# - This environment file is for reference
+# - The automated setup script (scripts/setup_environment.sh) is recommended
+# - PyTorch MUST be installed with correct CUDA version for GPU support
+# - See INSTALL.md for detailed installation instructions
+# - See docs/DNABERT2_COMPATIBILITY.md for troubleshooting

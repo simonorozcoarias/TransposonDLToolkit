@@ -1,0 +1,100 @@
+# Phase 2: DNABERT-2 Training and Evaluation Dependencies
+# Python >= 3.8
+#
+# IMPORTANT: Install PyTorch FIRST with appropriate CUDA version
+# For CUDA 11.8:
+#   pip install torch==2.4.1+cu118 torchvision==0.19.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+# For CUDA 12.1:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#
+# Then install this requirements file:
+#   pip install -r requirements.txt
+
+# ============================================================================
+# Core Deep Learning Framework
+# ============================================================================
+# NOTE: Install PyTorch separately with CUDA support (see above)
+# torch>=2.0.0  # Install separately with CUDA version
+# torchvision>=0.15.0  # Install with torch
+
+# Triton for FlashAttention (installed automatically with PyTorch)
+triton>=2.2.0
+
+# ============================================================================
+# Transformers and NLP
+# ============================================================================
+transformers>=4.35.0
+tokenizers>=0.15.0
+sentencepiece>=0.1.99
+
+# HuggingFace datasets
+datasets>=2.14.0
+
+# Accelerate for distributed training
+accelerate>=0.24.0
+
+# ============================================================================
+# DNABERT-2 Specific
+# ============================================================================
+# Efficient operations for transformers
+einops>=0.6.0
+
+# ============================================================================
+# Genomics and Biology
+# ============================================================================
+biopython>=1.83
+
+# ============================================================================
+# Data Science and Evaluation
+# ============================================================================
+# NumPy (required by most libraries)
+numpy>=2.0.0,<3.0.0
+
+# Pandas for data manipulation
+pandas>=1.5.0
+
+# Scikit-learn for metrics and utilities
+scikit-learn>=1.0.0
+
+# ============================================================================
+# Visualization
+# ============================================================================
+matplotlib>=3.5.0
+seaborn>=0.12.0
+
+# ============================================================================
+# Utilities
+# ============================================================================
+# YAML configuration files
+PyYAML>=6.0
+
+# Progress bars
+tqdm>=4.65.0
+
+# ============================================================================
+# Optional but Recommended
+# ============================================================================
+# Jupyter for notebooks
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Tensorboard for monitoring (optional)
+tensorboard>=2.14.0
+
+# ============================================================================
+# Version Notes (Tested Configuration - January 2026)
+# ============================================================================
+# Python: 3.8.10
+# PyTorch: 2.4.1+cu118
+# Transformers: 4.44.2
+# Triton: 3.0.0
+# CUDA Toolkit: 11.8.89
+# NVIDIA Driver: 535+
+#
+# This configuration was tested on:
+# - OS: Ubuntu 20.04 / RHEL 8
+# - GPU: NVIDIA A100 (40GB)
+# - Training: ~15 hours for 40 species
+# - Inference: ~28 minutes for 100 Mb genome
+#
+# For compatibility issues, see: docs/DNABERT2_COMPATIBILITY.md
