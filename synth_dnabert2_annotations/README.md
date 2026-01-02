@@ -276,12 +276,7 @@ Alternatively, use the small test dataset in `phase2/test_data/` for quick valid
 ## Documentation
 
 - **[INSTALL.md](INSTALL.md)**: Detailed installation instructions
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**: Technical architecture and workflow
 - **[docs/DNABERT2_COMPATIBILITY.md](docs/DNABERT2_COMPATIBILITY.md)**: Compatibility fixes
-- **[docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)**: Reproduction guide
-- **[docs/RESULTS.md](docs/RESULTS.md)**: Quantitative results
-- **[docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)**: External data sources
-- **[docs/SLURM_REFERENCE.md](docs/SLURM_REFERENCE.md)**: HPC adaptation guide
 
 ## System Requirements
 
