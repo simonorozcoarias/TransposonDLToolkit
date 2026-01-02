@@ -231,6 +231,49 @@ predictions/
     └── genome_tracks/
 ```
 
+### Step 7: Model Validation (Recommended)
+
+Validate your trained model with automated test script on small test datasets:
+
+```bash
+cd test_data
+
+# Configure the test (edit scripts/run_test.sh)
+# Set MODEL_PATH to your trained model checkpoint
+# Set USE_REAL_DATA=true for real data, false for synthetic
+
+# Run validation
+bash scripts/run_test.sh
+```
+
+**What it does**:
+- Automatically detects GPU/CPU
+- Runs predictions with optimized parameters (window=2048, stride=1024)
+- Evaluates against ground truth (F1, Precision, Recall, IoU)
+- Generates comprehensive visualizations
+- Creates timestamped output directory
+
+**Available test datasets**:
+- `test_data/synthetic/`: 500kb synthetic *D. melanogaster* (50 TE annotations)
+- `test_data/real/`: 500kb real *D. melanogaster* chr2L (FlyBase r6.66)
+
+**Expected results by model**:
+
+| Model Training | Synthetic F1 | Real F1 | Notes |
+|----------------|--------------|---------|-------|
+| Base DNABERT-2 (no training) | 0.35-0.55 | 0.20-0.40 | Poor, needs fine-tuning |
+| Fine-tuned (10 species) | 0.75-0.85 | 0.55-0.70 | Good, small scale |
+| Fine-tuned (40 species) | **0.88-0.90** | **0.65-0.80** | Excellent, production |
+
+**Output**: `test_data/output/test_predictions_TIMESTAMP/`
+- Predictions in GFF3/BED format
+- Comprehensive metrics (overall and per-chromosome)
+- Visualizations (IoU distribution, genome tracks, confusion matrix)
+
+**Purpose**: Verify training effectiveness and assess domain shift from synthetic to real genomic data.
+
+See [test_data/README.md](test_data/README.md) for detailed documentation and manual prediction options.
+
 ## Script Reference
 
 ### Data Preparation
@@ -310,21 +353,6 @@ See [config/production.yaml](config/production.yaml) for full configuration with
 
 - `config/production.template.yaml`: Template with placeholders for paths
 - `slurm/config.env.template`: Environment variables for SLURM
-
-## Test Data
-
-Quick validation with small test datasets:
-
-```bash
-cd test_data
-./scripts/run_test.sh
-```
-
-**Datasets**:
-- `synthetic/`: 500kb synthetic D. melanogaster
-- `real/`: 500kb real D. melanogaster (FlyBase r6.66)
-
-See [test_data/README.md](test_data/README.md) for details.
 
 ## Expected Results
 

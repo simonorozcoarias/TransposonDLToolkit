@@ -19,7 +19,7 @@ synth_dnabert2_annotations/
 ├── phase1/               # Synthetic genome generation
 │   ├── scripts/          # Data preparation and generation scripts
 │   ├── slurm/            # HPC job submission scripts
-│   ├── data/             # Placeholder for PanTEon Database
+│   ├── data/             # Placeholder for InpactorDB2
 │   └── examples/         # Sample outputs
 ├── phase2/               # DNABERT-2 training and evaluation
 │   ├── scripts/          # Training, evaluation, and prediction scripts
@@ -80,17 +80,6 @@ pip install -r phase2/requirements.txt
 python phase2/scripts/testing/test_dnabert2_installation.py
 ```
 
-### Quick Test (5 minutes)
-
-Test the prediction pipeline on example data:
-
-```bash
-cd phase2/test_data
-./scripts/run_test.sh
-```
-
-This will run predictions on a 500kb test genome and generate evaluation metrics.
-
 ## Usage
 
 ### Phase 1: Synthetic Genome Generation
@@ -100,12 +89,12 @@ Complete workflow for generating synthetic genomes with embedded TEs using HPC/S
 ```bash
 cd phase1
 
-# 1. Extract species information from PanTEon Database
+# 1. Extract species information from InpactorDB2
 python scripts/01_extract_species_from_inpactordb2.py \
   --fasta data/inpactordb2.fasta \
   --output data/species_list.csv
 
-# 2. Build species index from PanTEon Database
+# 2. Build species index from InpactorDB2
 sbatch slurm/job_build_species_index.sh
 # Executes: scripts/02_build_species_index.py
 
@@ -225,6 +214,44 @@ python scripts/evaluation/evaluate_model_automodel.py \
 
 See [phase2/README.md](phase2/README.md) for complete workflow.
 
+### Model Validation
+
+Validate your trained model with the automated test script:
+
+```bash
+cd phase2/test_data
+
+# Configure the test (edit scripts/run_test.sh):
+# - MODEL_PATH: Path to your trained model checkpoint
+# - USE_REAL_DATA: true for real D. mel data, false for synthetic
+
+# Run validation
+bash scripts/run_test.sh
+```
+
+**What it validates**:
+- Model predictions on 500kb test genome (synthetic or real)
+- Evaluation metrics: Precision, Recall, F1, IoU
+- Region-level performance with ground truth comparison
+- Visualizations of predictions vs annotations
+
+**Expected performance**:
+- **Fine-tuned model (40 species)**: F1 ~0.88-0.90 on synthetic, ~0.65-0.80 on real
+- **Fine-tuned model (10 species)**: F1 ~0.75-0.85 on synthetic, ~0.55-0.70 on real
+- **Base DNABERT-2 (no training)**: F1 ~0.35-0.55 on synthetic, ~0.20-0.40 on real
+
+**Output**:
+```
+output/test_predictions_TIMESTAMP/
+├── predictions.gff3              # Predicted TE regions
+├── metrics/overall_metrics.json  # Precision, Recall, F1, IoU
+└── visualizations/               # Evaluation plots and genome tracks
+```
+
+Use this to verify training effectiveness and assess domain shift from synthetic to real data.
+
+See [phase2/test_data/README.md](phase2/test_data/README.md) for detailed validation options.
+
 ## Key Features
 
 - **Multi-kingdom dataset**: 1,012 species (animals, plants, fungi, others)
@@ -263,7 +290,7 @@ See [docs/RESULTS.md](docs/RESULTS.md) for quantitative results.
 
 ### Phase 1 Requirements
 
-- **InpactorDB2**: TE sequence database, formerly known as PanTEon Database. 
+- **InpactorDB2**: TE sequence database (~[SIZE])
   - Download instructions: [phase1/data/README.md](phase1/data/README.md)
 
 ### Phase 2 Requirements
@@ -317,7 +344,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **DNABERT-2**: [Zhou et al., ICLR 2024](https://github.com/MAGICS-LAB/DNABERT_2)
 - **TEgenomeSimulator**: Rodriguez & Makałowski, 2024
-- **PanTEon Database**: Orozco-Arias et al.
+- **InpactorDB2**: Orozco-Arias et al.
 - **Supervisor**: Dr. Simón Orozco Arias
 
 ## Contributing
