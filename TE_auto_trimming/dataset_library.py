@@ -168,7 +168,6 @@ def create_species_dict_from_fasta(input_fasta):
             species_name = match.group(1)
             species_dict.setdefault(species_name, []).append(line_num)
 
-    print(f"{len(species_dict)} unique species were detected in {input_fasta}")
     return species_dict
 
 # Process an species from the dictionary (this includes downloading genome, running TE-Aid and getting the images)
@@ -266,7 +265,7 @@ def generation_multiprocessing(input_fasta, TEAid_dir, n_processes=20, output_di
     print(f"{total} sequences were found in {input_fasta}")
     
     species_dict = create_species_dict_from_fasta(input_fasta)
-    print(f"A total of {len(species_dict)} species were detected.")
+    print(f"A total of {len(species_dict)} unique species were detected.")
 
     # Create processes
     processes = []
