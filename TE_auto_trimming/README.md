@@ -15,7 +15,8 @@ The tool consists of three Python scripts:
 ## Installation
 1. Clone the repository:
 ```
-git clone https://github.com/[username]/TE_auto_trimming.git
+git clone https://github.com/simonorozcoarias/TransposonDLToolkit.git
+cd TransposonDLToolkit/TE_auto_trimming
 ```
 
 2. Install TE-Aid from github
