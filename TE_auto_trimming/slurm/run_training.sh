@@ -17,5 +17,4 @@ module load tensorflow-gpu/2.6.2
 /shared/ifbstor1/projects/tagua_gen_ec/anaconda3_homesimon/envs/teaid_agp/bin/python3.9 \
     Auto_trimming.py \
     --mode train \
-    --input_fasta ./data_generation/simulated_data_merged.fasta \
     --dataset_dir ./new_dataset
