@@ -22,9 +22,9 @@ git clone https://github.com/[username]/TE_auto_trimming.git
 ```
 git clone https://github.com/clemgoub/TE-Aid.git TEAid
 ```
-In order for TE-Aid to run correctly, the `-num_threads 16` parameter must be added to the blastp command.
+Make sure that TE-Aid has execution permissions:
 ```
-blastp -query $OUTPUT/TE.orfs -db $DIR/db/RepeatPeps.lib -outfmt 6 -num_threads 16 | sort -k1,1 -k12,12nr | sort -u -k1,1 | sed 's/#/--/g' > $OUTPUT/TE.blastp.out
+chmod +x TE-Aid
 ```
 
 3. Create the environment from the environment.yml file:
