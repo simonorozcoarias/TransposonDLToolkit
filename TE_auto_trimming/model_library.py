@@ -26,21 +26,23 @@ config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
 
-# para crear mapa de flujo pydot y graphviz
+# To create flow diagrams using pydot and graphviz
 try:
     import pydot
 except ImportError:
-    print("pydot no esta instalado. Instalando...")
+    print("pydot is not installed. Installing...")
     os.system('pip install pydot')
     import pydot
 
 try:
     import graphviz
 except ImportError:
-    print("graphviz no esta instalado. Instalando...")
+    print("graphviz is not installed. Installing...")
     os.system('pip install graphviz')
     import graphviz
 
+# This class flattens N-dimensional data to 2D before applying scikit-learn's StandardScaler, 
+# and then reshapes the data back to its original dimensions after transformation.
 class NDStandardScaler(TransformerMixin):
     def __init__(self, **kwargs):
         self._scaler = StandardScaler(copy=True, **kwargs)
@@ -84,28 +86,30 @@ class NDStandardScaler(TransformerMixin):
         self._orig_shape = X.shape[1:]
 
 def r2_score(y_true, y_pred):
-    # Suma de los cuadrados de los residuos
+    # Sum of squared residuals
     sum_squares_residuals = tf.reduce_sum(tf.square(y_true - y_pred))
 
-    # Media de los valores reales
+    # Mean of the true values
     mean_y_true = tf.reduce_mean(y_true)
 
-    # Suma de los cuadrados totales
+    # Total sum of squares
     sum_squares = tf.reduce_sum(tf.square(y_true - mean_y_true))
 
-    # Evitar division por cero ESTO LO HE PUESTO YO PGS
+    # Avoid division by zero
     epsilon = tf.keras.backend.epsilon()
     
     sum_squares = tf.maximum(sum_squares, epsilon)
 
-    # Coeficiente de determinacion R2
+    # Coefficient of determination (R2)
     R2 = 1 - sum_squares_residuals / sum_squares
     return R2
 
+# Implementation of a ResNet18-like convolutional neural network
 class ResNet18:
 
     tf.keras.backend.clear_session()
 
+    # Identity residual block
     @staticmethod
     def identity_block(X, filters: List[int]):
         # unpack number of filters to be used for each conv layer
@@ -132,6 +136,7 @@ class ResNet18:
 
         return X
 
+    # Convolutional residual block
     @staticmethod
     def convolutional_block(X, filters: List[int], strides: Tuple[int,int]=(2,2)):
         
@@ -167,6 +172,7 @@ class ResNet18:
 
         return X
 
+    # Build the full ResNet18-like model
     @staticmethod 
     def build(input_size: Tuple[int,int,int], classes: int) -> Model:
     
@@ -209,7 +215,7 @@ class ResNet18:
         model = Model(inputs=X_input, outputs=X, name='ResNet18_5x5')
         return model
 
-# Crea el modelo a partir de las distintas branches / features creadas con cnn_branch 
+# Create the model by combining the outputs of the four CNN branches 
 def auto_trimming(cnn_div, cnn_cov, cnn_dot, cnn_str):
     combinedInput = tf.keras.layers.concatenate([cnn_div.output, cnn_cov.output, cnn_dot.output, cnn_str.output])
 
@@ -285,6 +291,7 @@ def plot_r2(real, predicted, name):
 
     return r2
 
+# Plots Loss function vs Epochs, and R2 vs Epochs
 def plot_training_metrics(history):
 
     plt.figure()
@@ -340,14 +347,14 @@ def test_model(model_path, scalerx_path, data_path):
     print("NaNs in X_test:", np.isnan(X_test).sum())
     print("NaNs in Y_test:", np.isnan(Y_test).sum())
     
-    # === Load scaler ===
+    # Load scaler 
     scalerX = NDStandardScaler()
     scalerX.load_model(scalerx_path, X_test)
     X1_test_scl = scalerX.transform(X_test)
     
     print("NaNs in X1_test_scl after scaling:", np.isnan(X1_test_scl).sum())
 
-    # === Load model ===
+    # Load model
     model = tf.keras.models.load_model(
         model_path,
         custom_objects={
@@ -356,7 +363,7 @@ def test_model(model_path, scalerx_path, data_path):
         }
     )
 
-    # === Predict ===
+    # Predict
     predictions = model.predict(
         [
             X1_test_scl[:, :, :, 0],
@@ -400,7 +407,7 @@ def test_model(model_path, scalerx_path, data_path):
         metrics[case] = {"MSE": mse, "MAE": mae, "R2": r2}
         print(f"Case {case}: MSE={mse:.4f}, MAE={mae:.4f}, R2={r2:.4f}")
     
-        # --- Scatter plot por caso ---
+        # Scatter plot per case 
         plt.figure(figsize=(6,6))
     
         # Output 0
@@ -408,7 +415,7 @@ def test_model(model_path, scalerx_path, data_path):
         # Output 1
         plt.scatter(y_true[:, 1], y_pred[:, 1], alpha=0.6, color='green', marker='x', label='Output1')
     
-        # Linea de referencia y=x
+        # Reference line y=x
         min_val = min(y_true.min(), y_pred.min())
         max_val = max(y_true.max(), y_pred.max())
         plt.plot([min_val, max_val], [min_val, max_val], color='red', linestyle='--', label='y=x')
@@ -422,25 +429,11 @@ def test_model(model_path, scalerx_path, data_path):
         plt.savefig(os.path.join(output_dir, f"scatter_case_{case}.png"))
         plt.close()
     
-        # --- Calcular R2 por posicion ---
+        # Calculate R2 for Starting and Ending positions
         r2_initial = plot_r2(Y_test[idx, 0], predictions[idx, 0], f"StartingPos_{case}")
         r2_final = plot_r2(Y_test[idx, 1], predictions[idx, 1], f"EndingPos_{case}")
     
         print(f"R2 starting position_{case}: {r2_initial:.4f}")
         print(f"R2 ending position_{case}: {r2_final:.4f}")
     
-    df = pd.DataFrame({
-    "Sample": sample_names,
-    **{f"Real_Output{i}": Y_test[:, i] for i in range(Y_test.shape[1])},
-    **{f"Pred_Output{i}": predictions[:, i] for i in range(predictions.shape[1])}
-    })
-    df.to_csv(os.path.join(output_dir, "predicciones_metrics.csv"), index=False)
-
-    # === Guardar resumen de metricas ===
-    metrics_df = pd.DataFrame(metrics).T
-    metrics_df.to_csv(os.path.join(output_dir, "metrics_summary.csv"), index=True)
-
-    print(f"\nPredicciones guardadas en '{os.path.join(output_dir, 'predicciones_metrics.csv')}'")
-    print(f"Resumen de metricas guardado en '{os.path.join(output_dir, 'metrics_summary.csv')}'")
-
     return predictions
