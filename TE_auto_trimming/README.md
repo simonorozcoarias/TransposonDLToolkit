@@ -91,7 +91,7 @@ sbatch create_dataset.sh
 **Output**
 In the specified directory, this will generate 4 Numpy matrices: features_data.npy, labels_data.npy, case_labels.npy and species_labels.npy.
 
-After generating the PDFs (and images) and the dataset, we can choose in the script Auto_trimming.py if we want to do training or testing (for option 1) or trimming (for option 2). 
+After generating the PDFs (and images) and the dataset, the user can choose in the script Auto_trimming.py between two options: Option 1 for model training or testing, and Option 2 for trimming. 
 
 ### Training
 
@@ -129,8 +129,8 @@ sbatch auto_trimming.sh
 - Plots for Starting and Ending Position (Cases 1-4) (global Predicted vs Real)
 
 ### Trimming
-Previously, we will need to generate the dataset from the FASTA files with the sequences that we want to trim. 
-This will generate a .txt file where the trimmed sequences will be saved with the original header name (until # symbol) and indicates the positions in which the sequence was cut.
+Before running the trimming step, a dataset must be generated from the FASTA files containing the sequences to be processed.
+This step generates a .txt file in which the trimmed sequences are stored using their original header names (up to the # symbol). The file also records the positions at which each sequence was trimmed.
 
 **Batch processing (HPC/SLURM):**
 ```batch
