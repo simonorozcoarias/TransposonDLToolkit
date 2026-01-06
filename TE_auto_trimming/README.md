@@ -54,7 +54,7 @@ It will generate a FASTA file `simulated_data_merged.fasta`.
 - `--fasta`: Path to FASTA file from which synthetic data will be generated (required)
 - `--seq_per_case`: number of sequences to generate per case (4 cases)
 
-For next steps after synthetic data generation, the `teaid_agp` environment is required.
+For next steps after synthetic data generation, the `autotrim_env` environment is required.
 
 ### Create images from FASTA file with TE-Aid
 For this step, the following scripts from Goubert et al. (2022) are needed: TE-Aid, Run-c2g.R, consensus2genome.R and blastndotplot.R.
