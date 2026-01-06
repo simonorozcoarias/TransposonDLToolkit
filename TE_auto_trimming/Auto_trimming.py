@@ -184,7 +184,7 @@ if __name__ == '__main__':
         
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["teaid", "dataset", "train", "test", "trimming"], required=True, help="Modo de ejecucion")
-    parser.add_argument("--input_fasta", required=True, help="Archivo FASTA de libreria")
+    parser.add_argument("--input_fasta", help="Archivo FASTA de libreria")
     parser.add_argument("--dataset_dir", help="Directorio del dataset")
     
     parser.add_argument("--model", help="Modelo para generar secuencias cortadas")
