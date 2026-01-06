@@ -146,3 +146,6 @@ sbatch auto_trimming.sh
 
 **Output**
 - curated_seq.txt
+
+### References
+•	Goubert, C., Craig, R.J., Bilat, A.F. et al. (2022). A beginner’s guide to manual curation of transposable elements. Mobile DNA 13, 7. https://doi.org/10.1186/s13100-021-00259-7
