@@ -1,7 +1,10 @@
 # A Deep Learning–Based Computational Tool for Automatic Trimming of Transposable Elements in Large-Scale Genomic Projects
 Based on a computer vision strategy, this project proposes the application of deep learning techniques, specifically convolutional neural networks, for the identification and trimming of transposable elements (TEs).
+
 To create the input for the convolutional neural networks, FASTA sequences are converted into PDF files and then into images using the tool TE-Aid (Goubert et al., 2022).
+
 Image data are stored in NumPy arrays (dataset) with the corresponding labels (for synthetic data), for model training and testing.
+
 Also, the tool allows to input a FASTA file with sequences for trimming, returning the trimmed sequences as output. 
 
 The tool consists of three Python scripts:
