@@ -19,7 +19,7 @@ git clone https://github.com/[username]/TE_auto_trimming.git
 ```
 git clone https://github.com/clemgoub/TE-Aid.git TEAid
 ```
-In order for TE-Aid to work, the parameter `-num_threads 16` needs to be added to blastp:
+In order for TE-Aid to run correctly, the `-num_threads 16` parameter must be added to the blastp command.
 ```
 blastp -query $OUTPUT/TE.orfs -db $DIR/db/RepeatPeps.lib -outfmt 6 -num_threads 16 | sort -k1,1 -k12,12nr | sort -u -k1,1 | sed 's/#/--/g' > $OUTPUT/TE.blastp.out
 ```
