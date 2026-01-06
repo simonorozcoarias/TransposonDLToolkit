@@ -27,6 +27,10 @@ Make sure that TE-Aid has execution permissions:
 ```
 chmod +x TE-Aid
 ```
+Since multiple species are processed simultaneously, the BLAST output generated from aligning the sequence with its corresponding genome should be saved in the case-specific folder to avoid mixing it with other BLAST files. In the Run-c2g.R script, this can be ensured by specifying:
+```
+setwd(output)
+```
 
 3. Create the environment from the environment.yml file:
 ```
