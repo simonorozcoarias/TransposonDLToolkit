@@ -339,8 +339,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **DNABERT-2**: [Zhou et al., ICLR 2024](https://github.com/MAGICS-LAB/DNABERT_2)
 - **TEgenomeSimulator**: Rodriguez & Makałowski, 2024
-- **InpactorDB2**: Orozco-Arias et al.
-- **Supervisor**: Dr. Simón Orozco Arias
+- **PanTEon Database**: Orozco-Arias et al.
+- **Supervisor**: Dr. Simon Orozco-Arias
 
 ## Contributing
 
