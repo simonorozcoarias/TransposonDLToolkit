@@ -4,7 +4,7 @@ This phase generates synthetic genomes with embedded transposable elements (TEs)
 
 ## Overview
 
-**Input**: InpactorDB2 TE sequence database, formerly known as PanTEon Database
+**Input**: TE sequence database, for example sequences from PanTEon Database
 **Output**: Synthetic genomes (FASTA) + TE annotations (GFF3)
 **Tool**: TEgenomeSimulator v1.0.0
 **Dataset generated**: 1,012 species, 67.67 GB, 17.24M TE insertions
